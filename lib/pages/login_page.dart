@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/bookmark_controller.dart';
 
 /// Halaman Login (soal 1).
 /// Login dicek terhadap local database (Shared Preferences),
@@ -46,7 +47,10 @@ class _LoginPageState extends State<LoginPage> {
         SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
     } else {
-      // Sukses login -> masuk ke halaman utama.
+      // Sukses login -> masuk ke halaman utama (MainShell).
+      // Muat ulang bookmark milik user yang baru login.
+      await Get.find<BookmarkController>().loadBookmarks();
+      if (!mounted) return;
       Get.offAllNamed('/main');
     }
   }
@@ -54,7 +58,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -65,7 +68,8 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.science, size: 80, color: Color(0xFF6DA739)),
+                  const Icon(Icons.rocket_launch,
+                      size: 80, color: Color(0xFF2B5BA8)),
                   const SizedBox(height: 12),
                   const Text(
                     'SpaceNews\nExplorer',
@@ -96,6 +100,14 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF2B5BA8), width: 2),
+                      ),
                     ),
                     validator: (value) =>
                         value!.isEmpty ? 'Password tidak boleh kosong' : null,
@@ -104,14 +116,14 @@ class _LoginPageState extends State<LoginPage> {
                   _loading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            color: Color(0xFF6DA739),
+                            color: Color(0xFF2B5BA8),
                           ),
                         )
                       : ElevatedButton(
                           onPressed: _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF97CE4C),
-                            foregroundColor: Colors.black,
+                            backgroundColor: const Color(0xFF2B5BA8),
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -149,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF6DA739), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF2B5BA8), width: 2),
       ),
     );
   }

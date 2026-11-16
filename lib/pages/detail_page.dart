@@ -1,177 +1,197 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/favorite_controller.dart';
-import '../models/news.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../controllers/bookmark_controller.dart';
+import '../models/article.dart';
 
-/// Detail Screen (soal 3): foto, nama, status, spesies, gender, origin,
-/// location + tombol favorite dengan Snackbar dan icon yang berubah.
-class DetailPage extends StatefulWidget {
+/// Halaman Detail Berita (soal 3): gambar, judul, sumber berita,
+/// tanggal publikasi, penulis, ringkasan + tombol Read Full Article
+/// (membuka artikel asli di browser) + tombol bookmark dengan
+/// perubahan warna icon dan snackbar hijau/merah.
+class DetailPage extends StatelessWidget {
   final Article article;
 
   const DetailPage({super.key, required this.article});
 
-  @override
-  State<DetailPage> createState() => _DetailPageState();
-}
-
-class _DetailPageState extends State<DetailPage> {
-  final FavoriteController _favoriteController = Get.find<FavoriteController>();
+  /// Membuka artikel asli melalui browser (soal 3).
+  Future<void> _openFullArticle() async {
+    final Uri url = Uri.parse(article.url);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      Get.snackbar(
+        'Gagal membuka',
+        'Tautan artikel tidak dapat dibuka.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final article = widget.article;
+    // BookmarkController di-find di sini agar sinkron dengan Home & Bookmark.
+    final BookmarkController bookmarkController =
+        Get.find<BookmarkController>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(article.title,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          // Icon favorite berubah sesuai status favorit karakter (soal 3d).
-          Obx(
-            () => IconButton(
-              icon: Icon(
-                _favoriteController.isFavorite(article.id)
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-                color: _favoriteController.isFavorite(article.id)
-                    ? Colors.red
-                    : Colors.black45,
-              ),
-              onPressed: () async {
-                final bool added =
-                    await _favoriteController.toggleFavorite(article);
-                // Snackbar ketika karakter ditambahkan/dihapus dari favorit (soal 3c).
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(added
-                        ? '${article.title} ditambahkan ke favorit'
-                        : '${article.title} dihapus dari favorit'),
-                    backgroundColor: added ? Colors.green : Colors.redAccent,
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+        title: const Text('Detail Berita',
+            style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Foto karakter (soal 3a).
-            Center(
-              child: Hero(
-                tag: 'news-${article.imageUrl}',
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    article.imageUrl,
-                    height: 220,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 220,
-                      width: 220,
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.person, size: 80),
+            // Gambar berita (soal 3).
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                article.imageUrl,
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: 200,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.image, size: 64),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Judul berita.
+            Text(
+              article.title,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Sumber berita + tanggal publikasi (soal 3).
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2B5BA8).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    article.newsSite,
+                    style: const TextStyle(
+                      color: Color(0xFF2B5BA8),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                const Icon(Icons.calendar_today, size: 13, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  article.publishedFormatted,
+                  style: const TextStyle(color: Colors.black45, fontSize: 13),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            Center(
-              child: Text(
-                article.title,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+            // Penulis (soal 3).
+            Row(
+              children: [
+                const Icon(Icons.person, size: 16, color: Colors.grey),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    article.authors,
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Ringkasan berita (soal 3).
+            const Text(
+              'Ringkasan',
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              article.summary,
+              style: const TextStyle(
+                color: Colors.black54,
+                fontSize: 14,
+                height: 1.6,
               ),
             ),
             const SizedBox(height: 24),
-            // Info detail karakter: status, spesies, gender, origin, location.
-            _buildInfoCard('Title', article.title, Icons.favorite_outline),
-            _buildInfoCard('News Site', article.newsSite, Icons.pets),
-            _buildInfoCard('Published At', article.publisedAt, Icons.transgender),
-            const SizedBox(height: 16),
-            // Tombol favorite (soal 3b).
+            // Tombol Read Full Article -> buka artikel asli di browser (soal 3).
+            ElevatedButton.icon(
+              onPressed: _openFullArticle,
+              icon: const Icon(Icons.open_in_new),
+              label: const Text(
+                'Read Full Article',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2B5BA8),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Tombol bookmark (soal 3). Icon berubah warna sesuai status,
+            // dengan snackbar hijau saat ditambahkan dan merah saat dihapus.
             Obx(
               () => ElevatedButton.icon(
                 onPressed: () async {
                   final bool added =
-                      await _favoriteController.toggleFavorite(article);
+                      await bookmarkController.toggleBookmark(article);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(added
-                          ? '${article.title} ditambahkan ke favorit'
-                          : '${article.title} dihapus dari favorit'),
-                      backgroundColor:
-                          added ? Colors.green : Colors.redAccent,
+                          ? 'Berita ditambahkan ke bookmark'
+                          : 'Berita dihapus dari bookmark'),
+                      // Snackbar hijau saat tambah, merah saat hapus (soal 3).
+                      backgroundColor: added ? Colors.green : Colors.red,
                       duration: const Duration(seconds: 1),
                     ),
                   );
                 },
                 icon: Icon(
-                  _favoriteController.isFavorite(article.id)
-                      ? Icons.favorite
-                      : Icons.favorite_border,
+                  bookmarkController.isBookmarked(article.id)
+                      ? Icons.bookmark
+                      : Icons.bookmark_border,
                 ),
                 label: Text(
-                  _favoriteController.isFavorite(article.id)
-                      ? 'Hapus dari Favorit'
-                      : 'Tambahkan ke Favorit',
+                  bookmarkController.isBookmarked(article.id)
+                      ? 'Hapus dari Bookmark'
+                      : 'Tambahkan ke Bookmark',
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _favoriteController.isFavorite(article.id)
-                      ? Colors.redAccent
-                      : const Color(0xFF97CE4C),
-                  foregroundColor: Colors.white,
+                  backgroundColor: bookmarkController.isBookmarked(article.id)
+                      ? Colors.grey.shade300
+                      : const Color(0xFF2B5BA8),
+                  foregroundColor: bookmarkController.isBookmarked(article.id)
+                      ? Colors.black87
+                      : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(String label, String value, IconData icon) {
-    return Card(
-      color: Colors.white,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFF6DA739), size: 22),
-            const SizedBox(width: 12),
-            SizedBox(
-              width: 90,
-              child: Text(
-                label,
-                style: const TextStyle(color: Colors.black45, fontSize: 14),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

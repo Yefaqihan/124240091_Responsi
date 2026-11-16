@@ -17,6 +17,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _obscure = true;
+  bool _obscureConfirm = true;
   bool _loading = false;
 
   final AuthController authController = Get.find<AuthController>();
@@ -60,7 +61,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(title: const Text('Register')),
       body: Center(
         child: SingleChildScrollView(
@@ -71,11 +71,22 @@ class _RegisterPageState extends State<RegisterPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Icon(Icons.person_add,
-                    size: 64, color: Color(0xFF6DA739)),
+                    size: 64, color: Color(0xFF2B5BA8)),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _usernameCtrl,
-                  decoration: _inputDecoration('Username', Icons.person),
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF2B5BA8), width: 2),
+                    ),
+                  ),
                   validator: (value) =>
                       value!.isEmpty ? 'Username tidak boleh kosong' : null,
                 ),
@@ -92,6 +103,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF2B5BA8), width: 2),
+                    ),
                   ),
                   validator: (value) {
                     if (value!.isEmpty) return 'Password tidak boleh kosong';
@@ -102,9 +121,28 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmCtrl,
-                  obscureText: _obscure,
-                  decoration: _inputDecoration(
-                      'Konfirmasi Password', Icons.lock_outline),
+                  obscureText: _obscureConfirm,
+                  decoration: InputDecoration(
+                    labelText: 'Konfirmasi Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirm
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF2B5BA8), width: 2),
+                    ),
+                  ),
                   validator: (value) {
                     if (value!.isEmpty) {
                       return 'Konfirmasi password tidak boleh kosong';
@@ -119,12 +157,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 _loading
                     ? const Center(
                         child:
-                            CircularProgressIndicator(color: Color(0xFF6DA739)))
+                            CircularProgressIndicator(color: Color(0xFF2B5BA8)))
                     : ElevatedButton(
                         onPressed: _register,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF97CE4C),
-                          foregroundColor: Colors.black,
+                          backgroundColor: const Color(0xFF2B5BA8),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -140,20 +178,6 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF6DA739), width: 2),
       ),
     );
   }

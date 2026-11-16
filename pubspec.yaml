@@ -1,5 +1,5 @@
-name: space_news_explorer
-description: Space News Explorer - Responsi Mobile
+name: spacenews_explorer
+description: SpaceNews Explorer - Responsi Praktikum Pemrograman Mobile SI-A
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -13,8 +13,10 @@ dependencies:
   get: ^4.6.6
   # HTTP request ke API (Modul V)
   http: ^1.2.0
-  # Shared Preferences untuk session, data user & data favorit (Modul VI)
+  # Local database: session, data user & data bookmark (Modul VI)
   shared_preferences: ^2.2.2
+  # Membuka artikel asli di browser (soal 3 - Read Full Article)
+  url_launcher: ^6.2.5
   cupertino_icons: ^1.0.6
 
 dev_dependencies:

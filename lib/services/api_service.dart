@@ -1,29 +1,29 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/news.dart';
+import '../models/article.dart';
 
-/// Service untuk komunikasi dengan Rick and Morty API (Modul V: HTTP Request).
-/// Semua request menggunakan method GET.
+/// Service untuk komunikasi dengan Spaceflight News API (Modul V: HTTP).
+/// Base URL: https://api.spaceflightnewsapi.net/v4/articles
+/// Response:
+/// {
+///   "count": 36904,
+///   "next": "...?limit=10&offset=10",
+///   "previous": null,
+///   "results": [ { ...artikel... } ]
+/// }
 class ApiService {
   static const String baseUrl = 'https://api.spaceflightnewsapi.net/v4/articles';
 
-  /// Mengambil list berita. Bisa diberi filter status (alive/dead/unknown)
-  /// dan pencarian berdasarkan nama (bonus).
-  /// Endpoint: /article  |  /article?status=alive  |  /article?name=morty
-  static Future<List<Article>> fetchNews({
-    String? status,
-    String? name,
-  }) async {
-    // Menyusun query parameter untuk filter & search.
-    final Map<String, String> query = {};
-    if (status != null && status.toLowerCase() != 'all') {
-      query['status'] = status.toLowerCase();
-    }
-    if (name != null && name.trim().isNotEmpty) {
-      query['name'] = name.trim();
+  /// Mengambil daftar berita (minimal 10 berita, soal 2).
+  /// Bisa diberi filter [newsSite] untuk soal 5 (filter berdasarkan
+  /// sumber publikasi) — API mendukung parameter ?news_site=NASA.
+  static Future<List<Article>> fetchArticles({String? newsSite}) async {
+    final Map<String, String> query = {'limit': '10'};
+    if (newsSite != null && newsSite.isNotEmpty) {
+      query['news_site'] = newsSite;
     }
 
-    final Uri uri = Uri.parse('$baseUrl/news').replace(queryParameters: query);
+    final Uri uri = Uri.parse(baseUrl).replace(queryParameters: query);
     final http.Response response = await http.get(uri).timeout(
           const Duration(seconds: 15),
           onTimeout: () => throw Exception('Koneksi timeout, coba lagi.'),
@@ -32,27 +32,9 @@ class ApiService {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       final List results = data['results'];
-      // Jika hasil pencarian tidak ada, API tetap 200 dengan results kosong.
       return results.map((json) => Article.fromJson(json)).toList();
-    } else if (response.statusCode == 404) {
-      // 404 dari API berarti berita tidak ditemukan (filter/search tanpa hasil).
-      return [];
     } else {
       throw Exception('Gagal memuat berita (kode: ${response.statusCode})');
-    }
-  }
-
-  /// Mengambil detail satu berita berdasarkan id.
-  /// Endpoint: /article/{id}
-  static Future<Article> fetchNewsDetail(int id) async {
-    final http.Response response = await http
-        .get(Uri.parse('$baseUrl/news/$id'))
-        .timeout(const Duration(seconds: 15));
-
-    if (response.statusCode == 200) {
-      return Article.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Gagal memuat detail berita (kode: ${response.statusCode})');
     }
   }
 }

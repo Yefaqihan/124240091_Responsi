@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/auth_controller.dart';
-import 'controllers/favorite_controller.dart';
+import 'controllers/bookmark_controller.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/main_shell.dart';
 
-void main() async {
-  // Memastikan binding Flutter siap sebelum menggunakan plugin
-  // (Shared Preferences butuh ini).
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Baca session login dari Shared Preferences.
-  // Halaman utama hanya bisa diakses setelah user berhasil login (soal 6d):
-  // jika ada session, langsung ke MainShell, jika tidak ke halaman Login.
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  final String? session = prefs.getString('session');
+  // Pulihkan session terlebih dahulu agar BookmarkController tidak sempat
+  // membaca bookmark dengan username kosong.
+  final AuthController authController = Get.put(AuthController());
+  await authController.restoreSession();
 
-  // Registrasi controller GetX (Modul VIII - dependency management).
-  Get.put(AuthController());
-  Get.put(FavoriteController());
+  // Controller bookmark baru dibuat setelah session berhasil dipulihkan.
+  final BookmarkController bookmarkController = Get.put(BookmarkController());
+  final bool loggedIn = authController.currentUser.value != null;
 
-  runApp(MyApp(loggedIn: session != null && session.isNotEmpty));
+  // Pastikan bookmark akun aktif selesai dimuat sebelum halaman utama tampil.
+  if (loggedIn) {
+    await bookmarkController.loadBookmarks();
+  }
+
+  runApp(MyApp(loggedIn: loggedIn));
 }
 
 class MyApp extends StatelessWidget {
@@ -33,13 +34,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Rick & Morty Character Explorer',
+      title: 'SpaceNews Explorer',
       debugShowCheckedModeBanner: false,
-      // Tema dasar putih dengan aksen hijau Rick & Morty.
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF97CE4C),
-          brightness: Brightness.light,
+          seedColor: const Color(0xFF2B5BA8),
         ),
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
@@ -53,7 +52,7 @@ class MyApp extends StatelessWidget {
           elevation: 2,
         ),
       ),
-      // Route management dengan GetX (Modul VIII).
+      // Session yang tersimpan menentukan halaman pertama saat aplikasi dibuka.
       initialRoute: loggedIn ? '/main' : '/login',
       getPages: [
         GetPage(name: '/login', page: () => const LoginPage()),
